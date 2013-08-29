@@ -73,7 +73,7 @@ namespace quake
 #else
 		// How big a heap to allocate.
 	    #ifdef NORMAL_MODEL
-            static const size_t  heapSize	= 14 * 1024 * 1024;
+            static const size_t  heapSize	= 12 * 1024 * 1024;
 	    #endif
         #ifdef SLIM_MODEL
 		    static const size_t  heapSize	= 25 * 1024 * 1024;
