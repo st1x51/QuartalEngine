@@ -593,16 +593,8 @@ void Mod_LoadLighting (lump_t *l)
 	strcat(litfilename, ".lit");
 	data = (byte*) COM_LoadHunkFile (litfilename);
 
-    if(kurok)
-    {
-        LIGHTMAP_BYTES = 4;
-        MAX_LIGHTMAPS = 16;
-    }
-    else
-    {
-        LIGHTMAP_BYTES = 4; //1
-        MAX_LIGHTMAPS = 16; //64
-    }
+    LIGHTMAP_BYTES = 1;
+    MAX_LIGHTMAPS = 64;
 
 	if (data)
 	{
@@ -651,8 +643,8 @@ Mod_HL_LoadLighting
 void Mod_HL_LoadLighting (lump_t *l)
 {
 
-    LIGHTMAP_BYTES = 4;
-    MAX_LIGHTMAPS = 64;
+	int i;
+    LIGHTMAP_BYTES = 1;
 
 	if (!l->filelen)
 	{
@@ -662,6 +654,18 @@ void Mod_HL_LoadLighting (lump_t *l)
 
 	loadmodel->lightdata = static_cast<byte*>(Hunk_AllocName ( l->filelen, loadname));
 	memcpy (loadmodel->lightdata, mod_base + l->fileofs, l->filelen);
+	// Bakers "cheat" to avoid colored lights
+	// Run thru the lightmap data and average the colors to make it gray.
+	for (i=0; i<l->filelen; i+=3)
+	{
+	int grayscale;
+	byte out;
+	grayscale = (loadmodel->lightdata[i] + loadmodel->lightdata[i+1] + loadmodel->lightdata[i+2])/3;
+	if (grayscale > 255) grayscale = 255;
+	if (grayscale < 0) grayscale = 0;
+	out = (byte)grayscale;
+	loadmodel->lightdata[i] = loadmodel->lightdata[i+1] = loadmodel->lightdata[i+2] = out;	
+	}
 }
 
 
@@ -1049,11 +1053,17 @@ void Mod_LoadFaces (lump_t *l)
 
 		for (i=0 ; i<MAXLIGHTMAPS ; i++)
 			out->styles[i] = in->styles[i];
+		if (loadmodel->bspversion == HL_BSPVERSION)
+			i = LittleLong(in->lightofs/3);
+		else
 		i = LittleLong(in->lightofs);
 		if (i == -1)
 			out->samples = NULL;
 		else
-			out->samples = loadmodel->lightdata + (loadmodel->bspversion == HL_BSPVERSION ? i : i * 3);
+		// LordHavoc: .lit support begin
+		//	out->samples = loadmodel->lightdata + i; // LordHavoc: original code
+			out->samples = loadmodel->lightdata + (i * 3); // LordHavoc: expand white lighting
+		// LordHavoc: .lit support end
 
 	// set the drawing flags flag
 

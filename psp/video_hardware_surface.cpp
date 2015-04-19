@@ -33,18 +33,9 @@ extern "C"
 using namespace quake;
 
 int			skytexturenum;
-/*
-#ifdef NORMAL_MODEL
-#define	LIGHTMAP_BYTES 4		// 1 or 4, used to be 1
-#define	MAX_LIGHTMAPS 16        // used to be 64, reduced to fit under 2MB or else crashes psp if lightmap bytes is 4
-#endif
-#ifdef SLIM_MODEL
-#define	LIGHTMAP_BYTES 4		// 1 or 4, used to be 1
-#define	MAX_LIGHTMAPS 28        // used to be 64, reduced to fit under 2MB or else crashes psp if lightmap bytes is 4
-//#define	LIGHTMAP_BYTES 3		// 1 or 4, used to be 1
-//#define	MAX_LIGHTMAPS 37        // used to be 64, reduced to fit under 2MB or else crashes psp if lightmap bytes is 4
-#endif
-*/
+#define	LIGHTMAP_BYTES 1		// 1 or 4
+#define	MAX_LIGHTMAPS 64        // used to be 64, reduced to fit under 2MB or else crashes psp if lightmap bytes is 4
+
 
 #define	BLOCK_WIDTH  128
 #define	BLOCK_HEIGHT 128
@@ -704,8 +695,11 @@ void R_RenderBrushPoly (msurface_t *fa)
 		EmitWaterPolys (fa);
 		return;
 	}
+	// dr_mabsue1981: disabled to avoid HLBSP lightmap bugs
+/*
 	sceGuEnable(GU_ALPHA_TEST);
 	sceGuAlphaFunc(GU_GREATER, 0x88, 0xff);
+*/
 
 	if (fa->flags & SURF_UNDERWATER)
 		DrawGLWaterPoly (fa->polys);
@@ -715,8 +709,7 @@ void R_RenderBrushPoly (msurface_t *fa)
         return;
 
     // Alpha blended textures, no lightmaps.
-	else if ((!Q_strncmp(fa->texinfo->texture->name,"z",1)) ||
-            (!Q_strncmp(fa->texinfo->texture->name,"{",1)))
+    else if (!Q_strncmp(fa->texinfo->texture->name,"{",1))
 {
 		sceGuDepthMask(GU_TRUE);
 		sceGuEnable(GU_BLEND);
@@ -820,8 +813,12 @@ dynamic:
 		}
 	}
 
+	// dr_mabsue1981: disabled to avoid HLBSP lightmap bugs
+/*
 	sceGuAlphaFunc(GU_GREATER, 0, 0xff);
 	sceGuDisable(GU_ALPHA_TEST);
+*/
+}
 }
 
 /*
